@@ -1,0 +1,128 @@
+<html>
+
+<head>
+<style type="text/css">
+.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+}
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.left {
+  text-align: left;
+}
+.right {
+  text-align: right;
+}
+.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<title>Title</title>
+</head>
+
+<body>
+
+<div class="chunk" id="unnamed-chunk-1"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">library</span><span class="hl std">(tidyverse)</span>
+<span class="hl kwd">library</span><span class="hl std">(readxl)</span>
+<span class="hl kwd">library</span><span class="hl std">(lubridate)</span>
+<span class="hl kwd">library</span><span class="hl std">(scales)</span>
+</pre></div>
+</div></div>
+
+<div class="chunk" id="unnamed-chunk-2"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">df</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">read_excel</span><span class="hl std">(</span><span class="hl str">&quot;sample.xls&quot;</span><span class="hl std">)</span>
+<span class="hl std">df</span> <span class="hl opt">%&gt;%</span> <span class="hl kwd">head</span><span class="hl std">(</span><span class="hl num">5</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## # A tibble: 5 x 20
+##   index order_id order_date          ship_date           ship_mode
+##   &lt;dbl&gt; &lt;chr&gt;    &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;    
+## 1     1 JP-2017~ 2017-11-08 00:00:00 2017-11-08 00:00:00 即日配送 
+## 2     2 JP-2018~ 2018-10-07 00:00:00 2018-10-10 00:00:00 ファースト クラ~
+## 3     3 JP-2016~ 2016-08-18 00:00:00 2016-08-21 00:00:00 ファースト クラ~
+## 4     4 JP-2016~ 2016-11-25 00:00:00 2016-11-27 00:00:00 ファースト クラ~
+## 5     5 JP-2016~ 2016-11-25 00:00:00 2016-11-27 00:00:00 ファースト クラ~
+## # ... with 15 more variables: customer_id &lt;chr&gt;, customer_name &lt;chr&gt;,
+## #   customer_type &lt;chr&gt;, city &lt;chr&gt;, province &lt;chr&gt;, country &lt;chr&gt;,
+## #   region &lt;chr&gt;, product_id &lt;chr&gt;, category &lt;chr&gt;, subcategory &lt;chr&gt;,
+## #   product_name &lt;chr&gt;, sales &lt;dbl&gt;, sales_number &lt;dbl&gt;, discount &lt;dbl&gt;,
+## #   profit &lt;dbl&gt;
+</pre></div>
+</div></div>
+
+<p>1.共用一个y轴（左侧）</p>
+<div class="chunk" id="unnamed-chunk-3"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com"># two y in a single axis</span>
+<span class="hl com"># put color args into aes() to generate legend</span>
+<span class="hl std">df</span> <span class="hl opt">%&gt;%</span> <span class="hl kwd">mutate</span><span class="hl std">(</span><span class="hl kwc">order_year</span> <span class="hl std">=</span> <span class="hl kwd">year</span><span class="hl std">(order_date),</span>
+              <span class="hl kwc">order_year_month</span> <span class="hl std">=</span> <span class="hl kwd">floor_date</span><span class="hl std">(order_date,</span> <span class="hl str">&quot;month&quot;</span><span class="hl std">))</span> <span class="hl opt">%&gt;%</span>
+  <span class="hl kwd">group_by</span><span class="hl std">(order_year_month)</span> <span class="hl opt">%&gt;%</span>
+  <span class="hl kwd">summarise</span><span class="hl std">(</span><span class="hl kwc">sum_sales</span> <span class="hl std">=</span> <span class="hl kwd">sum</span><span class="hl std">(sales,</span> <span class="hl kwc">na.rm</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">),</span>
+            <span class="hl kwc">sum_profit</span> <span class="hl std">=</span> <span class="hl kwd">sum</span><span class="hl std">(profit,</span> <span class="hl kwc">na.rm</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">))</span> <span class="hl opt">%&gt;%</span>
+  <span class="hl kwd">ggplot</span><span class="hl std">()</span> <span class="hl opt">+</span>
+  <span class="hl kwd">geom_line</span><span class="hl std">(</span><span class="hl kwd">aes</span><span class="hl std">(order_year_month, sum_sales,</span> <span class="hl kwc">color</span> <span class="hl std">=</span> <span class="hl str">&quot;sum_sales&quot;</span><span class="hl std">))</span> <span class="hl opt">+</span>
+  <span class="hl kwd">geom_line</span><span class="hl std">(</span><span class="hl kwd">aes</span><span class="hl std">(order_year_month, sum_profit,</span> <span class="hl kwc">color</span> <span class="hl std">=</span> <span class="hl str">&quot;sum_profit&quot;</span><span class="hl std">))</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/unnamed-chunk-3-1.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" class="plot" /></div></div>
+
+<p>2.分别使用左右两个独立y轴:</p>
+
+<div class="chunk" id="unnamed-chunk-4"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com"># double y axis</span>
+<span class="hl com"># use &quot;labels = comma&quot; to avoid 1e+06 display</span>
+<span class="hl std">df</span> <span class="hl opt">%&gt;%</span> <span class="hl kwd">mutate</span><span class="hl std">(</span><span class="hl kwc">order_year</span> <span class="hl std">=</span> <span class="hl kwd">year</span><span class="hl std">(order_date),</span>
+              <span class="hl kwc">order_year_month</span> <span class="hl std">=</span> <span class="hl kwd">floor_date</span><span class="hl std">(order_date,</span> <span class="hl str">&quot;month&quot;</span><span class="hl std">))</span> <span class="hl opt">%&gt;%</span>
+  <span class="hl kwd">group_by</span><span class="hl std">(order_year_month)</span> <span class="hl opt">%&gt;%</span>
+  <span class="hl kwd">summarise</span><span class="hl std">(</span><span class="hl kwc">sum_sales</span> <span class="hl std">=</span> <span class="hl kwd">sum</span><span class="hl std">(sales,</span> <span class="hl kwc">na.rm</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">),</span>
+            <span class="hl kwc">sum_profit</span> <span class="hl std">=</span> <span class="hl kwd">sum</span><span class="hl std">(profit,</span> <span class="hl kwc">na.rm</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">))</span> <span class="hl opt">%&gt;%</span>
+  <span class="hl kwd">ggplot</span><span class="hl std">()</span> <span class="hl opt">+</span>
+  <span class="hl kwd">geom_line</span><span class="hl std">(</span><span class="hl kwd">aes</span><span class="hl std">(order_year_month, sum_sales,</span> <span class="hl kwc">color</span> <span class="hl std">=</span> <span class="hl str">&quot;sum_sales&quot;</span><span class="hl std">))</span> <span class="hl opt">+</span>
+  <span class="hl kwd">geom_line</span><span class="hl std">(</span><span class="hl kwd">aes</span><span class="hl std">(order_year_month, sum_profit</span><span class="hl opt">*</span><span class="hl num">10</span><span class="hl std">,</span> <span class="hl kwc">color</span> <span class="hl std">=</span> <span class="hl str">&quot;sum_profit&quot;</span><span class="hl std">))</span> <span class="hl opt">+</span>
+  <span class="hl kwd">scale_y_continuous</span><span class="hl std">(</span><span class="hl kwc">labels</span> <span class="hl std">= comma,</span> <span class="hl kwc">sec.axis</span> <span class="hl std">=</span> <span class="hl kwd">sec_axis</span><span class="hl std">(</span><span class="hl opt">~</span> <span class="hl std">.</span><span class="hl opt">*</span><span class="hl num">0.1</span><span class="hl std">,</span><span class="hl kwc">name</span> <span class="hl std">=</span> <span class="hl str">&quot;profit&quot;</span><span class="hl std">,</span> <span class="hl kwc">labels</span> <span class="hl std">= comma))</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" class="plot" /></div></div>
+
+</body>
+</html>
